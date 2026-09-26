@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liam's Game!</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#29b6f6; --sky-deep:#0277bd; --navy:#0b3a66;
+  --grass:#43a047; --grass-deep:#1b5e20; --leaf:#9ccc65;
+  --sun:#ffca28; --sun-deep:#c68a00;
+  --font:'Fredoka','Trebuchet MS','Arial Rounded MT Bold',system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--font);color:var(--navy);
+  background:linear-gradient(180deg,#4fc3f7 0%,#b3e5fc 56%,#8bc34a 56%,#558b2f 100%) fixed;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+  user-select:none;-webkit-user-select:none;overflow-x:hidden;
+}
+#app{max-width:760px;margin:0 auto;padding:14px 16px 36px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:4px solid #fff;outline-offset:3px}
+
+/* Toy-block buttons */
+.btn{border:none;border-radius:22px;padding:14px 22px;font-size:1.3rem;font-weight:700;color:#fff;
+  background:var(--sky-deep);box-shadow:0 6px 0 var(--navy);transition:transform .08s,box-shadow .08s}
+.btn:active,.big-choice:active,.level:active,.key:active,.tile:active{transform:translateY(5px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+.btn.green{background:var(--grass);box-shadow:0 6px 0 var(--grass-deep)}
+.btn.yellow{background:var(--sun);color:var(--navy);box-shadow:0 6px 0 var(--sun-deep)}
+.btn.small{padding:8px 14px;font-size:1.6rem;border-radius:16px;min-width:3.4rem}
+
+/* Home */
+.parade{display:flex;justify-content:center;gap:clamp(4px,2vw,12px);font-size:clamp(1.8rem,7vw,2.3rem);margin-top:6px;padding:0 3.6rem}
+.parade span{display:inline-block;animation:bob 2.4s ease-in-out infinite}
+.parade span:nth-child(2){animation-delay:.3s}.parade span:nth-child(3){animation-delay:.6s}
+.parade span:nth-child(4){animation-delay:.9s}.parade span:nth-child(5){animation-delay:1.2s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.title{font-size:clamp(3rem,12vw,4.8rem);font-weight:700;color:#fff;text-align:center;margin:4px 0 16px;line-height:1;
+  text-shadow:0 4px 0 var(--sky-deep),0 8px 0 var(--navy),0 12px 14px rgba(11,58,102,.35)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.big-choice{border:none;border-radius:28px;padding:22px 10px 18px;color:#fff;display:flex;flex-direction:column;align-items:center;gap:8px}
+.big-choice.math{background:var(--grass);box-shadow:0 8px 0 var(--grass-deep)}
+.big-choice.reading{background:var(--sky-deep);box-shadow:0 8px 0 var(--navy)}
+.bc-art{font-size:clamp(2.4rem,10vw,3.6rem);font-weight:700;background:#fff;border-radius:18px;padding:2px 16px}
+.math .bc-art{color:var(--grass-deep)}.reading .bc-art{color:var(--sky-deep)}
+.bc-label{font-size:1.8rem;font-weight:700}
+.shelf-wrap{margin-top:24px;background:rgba(255,255,255,.9);border-radius:24px;padding:14px 14px 6px}
+.shelf-wrap h2{margin:0 0 6px;font-size:1.35rem;text-align:center}
+.shelf{border-bottom:10px solid #8d6e63;border-radius:0 0 6px 6px;padding:4px 4px 2px;margin-bottom:12px}
+.shelf-label{font-size:1rem;font-weight:600}
+.shelf-trophies{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.mini svg{width:100%;height:auto;max-height:84px;display:block}
+.mini:not(.won){filter:grayscale(1);opacity:.25}
+
+/* Menu */
+.home-top{position:relative;height:0}
+.menu-btn{position:absolute;left:0;top:0;z-index:20}
+.menu{position:absolute;left:0;top:3.6rem;z-index:30;background:#fff;border-radius:18px;padding:8px;min-width:210px;
+  box-shadow:0 8px 0 rgba(11,58,102,.2),0 10px 24px rgba(11,58,102,.25)}
+.menu[hidden]{display:none}
+.menu-item{display:block;width:100%;text-align:left;border:none;background:none;border-radius:12px;padding:12px 14px;font-size:1.15rem;font-weight:600;color:var(--navy)}
+.menu-item:hover,.menu-item:focus-visible{background:#e3f2fd}
+.modal-bg{position:fixed;inset:0;z-index:60;background:rgba(11,58,102,.55);display:grid;place-items:center;padding:20px}
+.modal{background:#fff;border-radius:26px;padding:22px 20px;max-width:340px;width:100%;text-align:center;box-shadow:0 8px 0 rgba(11,58,102,.3)}
+.modal h2{margin:0 0 6px;font-size:1.5rem}
+.modal p{margin:0 0 18px;font-size:1.05rem}
+.modal .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* Top bar */
+.bar{display:flex;align-items:center;gap:10px}
+.bar-title{flex:1;text-align:center;color:#fff;font-size:clamp(1.6rem,6vw,2.2rem);margin:0;text-shadow:0 3px 0 var(--navy)}
+.bar-spacer{width:3.4rem}
+.note{text-align:center;color:var(--navy);background:rgba(255,255,255,.85);border-radius:999px;padding:6px 14px;margin:12px auto 0;width:fit-content;font-weight:600}
+
+/* Level list */
+.levels{display:grid;gap:14px;margin-top:16px}
+.level{display:flex;align-items:center;gap:14px;border:none;border-radius:22px;padding:14px 18px;color:#fff;text-align:left}
+.level.green{background:var(--grass);box-shadow:0 6px 0 var(--grass-deep)}
+.level.blue{background:var(--sky-deep);box-shadow:0 6px 0 var(--navy)}
+.lv-icon{font-size:2.4rem;background:#fff;border-radius:16px;width:3.6rem;height:3.6rem;display:grid;place-items:center;flex:none}
+.lv-num{display:block;font-size:1rem;opacity:.9}
+.lv-name{display:block;font-size:1.5rem;font-weight:700}
+.lv-trophy{margin-left:auto;font-size:2.2rem}
+
+/* Road progress */
+.road{position:relative;height:3.4rem;margin:12px 0 14px;background:#546e7a;border-radius:14px;border:3px solid #37474f}
+.lane{position:absolute;left:10px;right:10px;top:50%;border-top:4px dashed #ffeb3b;transform:translateY(-50%)}
+.flag{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:2rem}
+.racer{position:absolute;left:4px;top:50%;font-size:2.3rem;line-height:1;transform:translateY(-50%) scaleX(-1);transition:left .8s cubic-bezier(.3,1.4,.5,1)}
+
+/* Question card */
+.card{background:#fff;border-radius:28px;padding:20px 14px;box-shadow:0 8px 0 rgba(11,58,102,.2);text-align:center}
+.hint-row{display:flex;justify-content:center;margin-top:16px}
+
+/* Math */
+.eq{display:flex;align-items:flex-start;justify-content:center;gap:clamp(4px,2vw,16px)}
+.term{display:flex;flex-direction:column;align-items:center;min-width:clamp(62px,19vw,130px)}
+.num,.op{font-size:clamp(2.8rem,13vw,5rem);font-weight:700;line-height:1.15}
+.op{color:var(--sky-deep)}
+.answer{min-width:clamp(60px,18vw,110px);height:clamp(3.4rem,15vw,5.8rem);border:4px dashed var(--sky);border-radius:18px;
+  font-size:clamp(2.8rem,13vw,5rem);font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--grass-deep);padding:0 6px}
+.answer.empty{color:#b0bec5}
+.answer.right{border-style:solid;border-color:var(--grass);background:#e8f5e9}
+.dots{--d:clamp(11px,3.2vw,20px);display:flex;flex-wrap:wrap;justify-content:center;gap:5px;
+  width:calc(5 * var(--d) + 20px);margin-top:10px;visibility:hidden;min-height:var(--d)}
+.dots i{width:var(--d);height:var(--d);border-radius:50%;background:var(--sky-deep);display:block}
+.dots.green i{background:var(--grass)}
+.dots .zero{font-size:1rem;font-weight:600;color:#78909c}
+.show-hint .dots{visibility:visible}
+.show-hint .dots i{animation:pop .3s both}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:360px;margin:16px auto 0}
+.key{font-size:2rem;font-weight:700;padding:12px 0;border:none;border-radius:18px;background:#fff;color:var(--navy);box-shadow:0 5px 0 #90caf9}
+.key.alt{background:#e3f2fd}
+.key.go{background:var(--grass);color:#fff;box-shadow:0 5px 0 var(--grass-deep)}
+
+/* Reading */
+.pic{font-size:clamp(4.5rem,20vw,7rem);line-height:1.1}
+.word{font-size:clamp(2rem,8vw,3rem);font-weight:600}
+.hl{color:var(--grass);font-weight:700;font-size:1.3em}
+.choices3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.tile{font-size:clamp(3rem,14vw,4.5rem);font-weight:700;border:none;border-radius:22px;background:#fff;color:var(--sky-deep);
+  box-shadow:0 6px 0 #90caf9;padding:10px 0;display:flex;flex-direction:column;align-items:center;line-height:1}
+.tile small{font-size:.5em;color:var(--grass-deep);margin-top:4px}
+.tile.right{background:var(--grass);color:#fff;box-shadow:0 6px 0 var(--grass-deep)}
+.tile.right small{color:#fff}
+.tile.wrong{opacity:.3}
+.tile.glow{background:#fff8e1;outline:5px solid var(--sun);animation:glow 1s ease-in-out infinite}
+@keyframes glow{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:16px}
+.tile.sm{width:clamp(64px,18vw,86px);font-size:clamp(2.4rem,10vw,3.2rem)}
+.tile.used{visibility:hidden}
+.model{display:flex;justify-content:center;gap:10px;font-size:clamp(2.2rem,9vw,3rem);font-weight:600;color:#90a4ae}
+.model .next{color:var(--sky-deep);text-decoration:underline;text-underline-offset:8px}
+.model .done{color:var(--grass)}
+.slots{display:flex;justify-content:center;gap:10px;margin-top:8px}
+.slot{width:clamp(52px,15vw,72px);height:clamp(58px,16vw,78px);border-bottom:6px solid var(--sky);
+  font-size:clamp(2.4rem,10vw,3.2rem);font-weight:700;display:flex;align-items:flex-end;justify-content:center;color:var(--grass-deep)}
+.slots.right .slot{border-color:var(--grass)}
+
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+
+/* Win */
+.win{text-align:center;padding-top:8px}
+.win-title{font-size:clamp(2.4rem,10vw,4rem);color:#fff;margin:8px 0;line-height:1.05;
+  text-shadow:0 4px 0 var(--sky-deep),0 8px 0 var(--navy)}
+.trophy-big{width:min(60vw,270px);margin:0 auto;animation:trophyIn .9s cubic-bezier(.2,1.6,.4,1) both}
+.trophy-big svg{width:100%;height:auto;display:block}
+@keyframes trophyIn{from{transform:scale(.2) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.win-sub{background:#fff;display:inline-block;padding:8px 18px;border-radius:999px;font-size:1.2rem;font-weight:600;margin:10px 0 0}
+.win-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:20px}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script>
+/* ============ SETTINGS (easy to change) ============ */
+const KID = 'Liam';
+const QUESTIONS_PER_MATH_LEVEL = 8;
+
+const MATH_LEVELS = [
+  { name:'Race Track',      icon:'🏎️', gen:()=>[rand(1,5), rand(1,5)] },
+  { name:'Dino Valley',     icon:'🦕', gen:()=>[rand(1,6), rand(0,4)] },
+  { name:'Hero City',       icon:'🦸', gen:()=>[rand(4,9), rand(1,3)] },
+  { name:'Monster Trucks',  icon:'🚙', gen:()=>{ const a=rand(1,9); return [a, rand(1, Math.min(9, 12-a))]; } },
+  { name:'Volcano Island',  icon:'🌋', gen:()=>[rand(5,9), rand(5,9)] },
+];
+
+const READING_LEVELS = [
+  { name:'Letter Garage', icon:'🚗', type:'letters', items:'ABCDEFGHI'.split('') },
+  { name:'Dino Letters',  icon:'🦖', type:'letters', items:'JKLMNOPQR'.split('') },
+  { name:'Hero Letters',  icon:'🦸', type:'letters', items:'STUVWXYZ'.split('') },
+  { name:'Animal Words',  icon:'🐶', type:'words', items:[['cat','🐱'],['dog','🐶'],['pig','🐷'],['cow','🐮'],['fox','🦊'],['hen','🐔'],['bug','🐛'],['bee','🐝']] },
+  { name:'Zoom Words',    icon:'🚌', type:'words', items:[['car','🚗'],['bus','🚌'],['van','🚐'],['jet','✈️'],['cab','🚕'],['rex','🦖'],['sun','☀️'],['ball','⚽']] },
+];
+
+const LETTER_WORDS = {
+  A:['🍎','Apple'], B:['⚽','Ball'], C:['🚗','Car'], D:['🐶','Dog'], E:['🐘','Elephant'],
+  F:['🚒','Fire truck'], G:['🍇','Grapes'], H:['🦸','Hero'], I:['🍦','Ice cream'], J:['✈️','Jet'],
+  K:['🪁','Kite'], L:['🦁','Lion'], M:['🌙','Moon'], N:['👃','Nose'], O:['🐙','Octopus'],
+  P:['🍕','Pizza'], Q:['👑','Queen'], R:['🚀','Rocket'], S:['⭐','Star'], T:['🦖','T-rex'],
+  U:['☂️','Umbrella'], V:['🚐','Van'], W:['🐋','Whale'], X:['🦊','Fox'], Y:['🪀','Yo-yo'], Z:['🦓','Zebra']
+};
+/* How the voice says each letter name */
+const NAMES = {A:'ay',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'jee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'ell',M:'em',
+  N:'en',O:'oh',P:'pee',Q:'cue',R:'are',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'};
+
+const PRAISE = ['Great job!','You got it!','Awesome!','Super job!',`Way to go, ${KID}!`,'Hero work!','Vroom vroom, nice!'];
+
+/* ============ HELPERS ============ */
+function rand(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function nameOf(ch){ return NAMES[ch.toUpperCase()]; }
+function reshake(el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+
+/* ============ SAVED TROPHIES ============ */
+const STORE = 'liamsGame.v1';
+let progress = loadProgress();
+function loadProgress(){
+  try{ const p = JSON.parse(localStorage.getItem(STORE)); if(p && p.math && p.reading) return p; }catch(e){}
+  return { math:[0,0,0,0,0], reading:[0,0,0,0,0] };
+}
+function saveProgress(){ try{ localStorage.setItem(STORE, JSON.stringify(progress)); }catch(e){} }
+function trophyCount(){ return progress.math.filter(Boolean).length + progress.reading.filter(Boolean).length; }
+
+/* ============ SOUND ============ */
+let ac = null;
+function audio(){
+  try{
+    if(!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if(ac.state === 'suspended') ac.resume();
+  }catch(e){ ac = null; }
+  return ac;
+}
+function tone(freq, start, dur, type='triangle', vol=0.18){
+  const a = audio(); if(!a) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, start);
+  g.gain.exponentialRampToValueAtTime(vol, start + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  o.connect(g).connect(a.destination);
+  o.start(start); o.stop(start + dur + 0.05);
+}
+function dingSound(){ const a=audio(); if(!a) return; const t=a.currentTime+0.02; tone(880,t,0.15); tone(1320,t+0.1,0.3); }
+function tapSound(){ const a=audio(); if(!a) return; tone(660,a.currentTime+0.01,0.1,'sine',0.12); }
+function oopsSound(){ const a=audio(); if(!a) return; const t=a.currentTime+0.02; tone(260,t,0.2,'sine',0.15); tone(200,t+0.15,0.3,'sine',0.15); }
+function fanfare(){
+  const a=audio(); if(!a) return; const t=a.currentTime+0.05;
+  const melody=[[392,0,.14],[523,.15,.14],[659,.3,.14],[784,.45,.35],[659,.82,.14],[784,.97,.7],
+                [880,1.75,.14],[988,1.9,.14],[1047,2.05,.9]];
+  melody.forEach(([f,s,d])=>{ tone(f,t+s,d,'triangle',0.2); tone(f/2,t+s,d,'sawtooth',0.04); });
+  [[131,0,.45],[196,.45,.4],[262,.97,.7],[175,1.75,.3],[262,2.05,.9]].forEach(([f,s,d])=>tone(f,t+s,d,'sine',0.18));
+}
+
+/* ============ VOICE ============ */
+const canSpeak = 'speechSynthesis' in window;
+let voice = null;
+function loadVoice(){
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v=>/en[-_]US/i.test(v.lang) && /Samantha|Google US|Aria|Jenny|Female/i.test(v.name))
+       || vs.find(v=>/^en[-_]US/i.test(v.lang)) || vs.find(v=>/^en/i.test(v.lang)) || null;
+}
+if(canSpeak){ loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function say(text){
+  if(!canSpeak) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.85; u.pitch = 1.1;
+  if(voice) u.voice = voice;
+  speechSynthesis.speak(u);
+}
+function hush(){ if(canSpeak) speechSynthesis.cancel(); }
+
+/* ============ TROPHY ============ */
+function trophySVG(icon){
+  return `<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trophy for ${KID}">
+    <defs><linearGradient id="gold" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#ffe082"/><stop offset=".45" stop-color="#ffc107"/><stop offset="1" stop-color="#ff8f00"/>
+    </linearGradient></defs>
+    <path d="M46 42 C4 42 8 112 64 112" fill="none" stroke="#ffb300" stroke-width="12" stroke-linecap="round"/>
+    <path d="M154 42 C196 42 192 112 136 112" fill="none" stroke="#ffb300" stroke-width="12" stroke-linecap="round"/>
+    <path d="M38 26 H162 V68 C162 116 132 142 100 142 C68 142 38 116 38 68 Z" fill="url(#gold)" stroke="#e65100" stroke-width="3"/>
+    <path d="M56 36 V66 C56 90 66 106 80 116" fill="none" stroke="#fff8e1" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+    <text x="100" y="100" font-size="46" text-anchor="middle">${icon}</text>
+    <rect x="88" y="140" width="24" height="24" fill="#ffb300"/>
+    <path d="M60 164 H140 L152 184 H48 Z" fill="url(#gold)" stroke="#e65100" stroke-width="2"/>
+    <rect x="32" y="184" width="136" height="50" rx="8" fill="#1b5e20"/>
+    <rect x="42" y="191" width="116" height="36" rx="6" fill="#ffd54f"/>
+    <text x="100" y="218" text-anchor="middle" font-size="27" font-weight="700" fill="#0b3a66" font-family="Fredoka, Trebuchet MS, sans-serif">${KID.toUpperCase()}</text>
+  </svg>`;
+}
+
+/* ============ CONFETTI ============ */
+function confetti(){
+  const c = document.createElement('canvas'); c.className='confetti'; document.body.appendChild(c);
+  const ctx = c.getContext('2d'); const dpr = window.devicePixelRatio || 1;
+  const W = innerWidth, H = innerHeight;
+  c.width = W*dpr; c.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  const colors = ['#43a047','#9ccc65','#29b6f6','#0277bd','#ffca28','#ffffff'];
+  const parts = Array.from({length:170}, ()=>({
+    x:Math.random()*W, y:-20-Math.random()*H*0.7, w:6+Math.random()*8, h:8+Math.random()*10,
+    vx:-2+Math.random()*4, vy:2+Math.random()*3, r:Math.random()*6.28, vr:-0.2+Math.random()*0.4, c:pick(colors)
+  }));
+  const start = performance.now();
+  function frame(now){
+    ctx.clearRect(0,0,W,H);
+    parts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy=Math.min(p.vy+0.05,6); p.r+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+    });
+    if(now - start < 5000 && c.isConnected) requestAnimationFrame(frame); else c.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ============ SCREENS ============ */
+const $app = document.getElementById('app');
+const SUBJECTS = {
+  math:    { title:'Math',    levels:MATH_LEVELS,    color:'green' },
+  reading: { title:'Reading', levels:READING_LEVELS, color:'blue'  },
+};
+let game = null;
+
+function shelfRow(subj){
+  const S = SUBJECTS[subj];
+  return `<div class="shelf"><div class="shelf-label">${S.title}</div><div class="shelf-trophies">
+    ${S.levels.map((l,i)=>`<div class="mini ${progress[subj][i]?'won':''}">${trophySVG(l.icon)}</div>`).join('')}
+  </div></div>`;
+}
+
+function renderHome(){
+  game = null;
+  $app.innerHTML = `
+    <div class="home-top">
+      <button class="btn small menu-btn" data-action="menu" aria-label="Menu" aria-haspopup="true" aria-expanded="false">☰</button>
+      <div class="menu" id="menu" hidden>
+        <button class="menu-item" data-action="reset-ask">🗑️ Reset trophies</button>
+      </div>
+    </div>
+    <div class="parade" aria-hidden="true"><span>🏎️</span><span>🦖</span><span>🦸</span><span>🦕</span><span>🚙</span></div>
+    <h1 class="title">${KID}’s Game!</h1>
+    <div class="choices">
+      <button class="big-choice math" data-action="subject" data-subject="math"><span class="bc-art">1+2</span><span class="bc-label">Math</span></button>
+      <button class="big-choice reading" data-action="subject" data-subject="reading"><span class="bc-art">ABC</span><span class="bc-label">Reading</span></button>
+    </div>
+    <section class="shelf-wrap">
+      <h2>${KID}’s trophies: ${trophyCount()} of 10</h2>
+      ${shelfRow('math')}${shelfRow('reading')}
+    </section>`;
+}
+
+function renderLevels(subj){
+  const S = SUBJECTS[subj];
+  $app.innerHTML = `
+    <div class="bar"><button class="btn small" data-action="home" aria-label="Home">🏠</button>
+      <h1 class="bar-title">${S.title}</h1><span class="bar-spacer"></span></div>
+    ${subj==='reading' ? '<p class="note">Levels 1 to 3 are letters. Levels 4 and 5 are words.</p>' : ''}
+    <div class="levels">
+      ${S.levels.map((l,i)=>`
+        <button class="level ${S.color}" data-action="start" data-subject="${subj}" data-level="${i}">
+          <span class="lv-icon">${l.icon}</span>
+          <span><span class="lv-num">Level ${i+1}</span><span class="lv-name">${l.name}</span></span>
+          <span class="lv-trophy">${progress[subj][i] ? '🏆' : ''}</span>
+        </button>`).join('')}
+    </div>`;
+}
+
+function startLevel(subj, idx){
+  const level = SUBJECTS[subj].levels[idx];
+  let questions = [];
+  if(subj === 'math'){
+    const seen = new Set(); let tries = 0;
+    while(questions.length < QUESTIONS_PER_MATH_LEVEL && tries++ < 300){
+      const [a,b] = level.gen(); const k = a+'+'+b;
+      if(seen.has(k)) continue; seen.add(k); questions.push({a,b});
+    }
+  } else if(level.type === 'letters'){
+    questions = shuffle(level.items.slice()).map(letter=>({letter}));
+  } else {
+    questions = shuffle(level.items.slice()).map(([word,pic])=>({word,pic}));
+  }
+  game = { subj, idx, level, questions, qi:0, locked:false };
+  $app.innerHTML = `
+    <div class="bar"><button class="btn small" data-action="levels" aria-label="Back to levels">⬅️</button>
+      <h1 class="bar-title">${level.icon} Level ${idx+1}</h1>
+      <button class="btn small" data-action="repeat" aria-label="Say it again">🔊</button></div>
+    <div class="road" aria-hidden="true"><div class="lane"></div><span class="flag">🏁</span><span class="racer" id="racer">🏎️</span></div>
+    <div id="stage"></div>`;
+  showQuestion();
+}
+
+function updateRoad(frac){
+  const r = document.getElementById('racer');
+  if(r) r.style.left = `calc(4px + ${frac} * (100% - 3.2rem))`;
+}
+
+function showQuestion(){
+  const q = game.questions[game.qi];
+  game.locked = false; game.wrong = 0; game.hint = false;
+  updateRoad(game.qi / game.questions.length);
+  if(game.subj === 'math') renderMath(q);
+  else if(game.level.type === 'letters') renderLetter(q);
+  else renderWord(q);
+  say(game.prompt);
+}
+
+function nextQuestion(){
+  if(!game) return;
+  game.qi++;
+  if(game.qi >= game.questions.length) finishLevel();
+  else showQuestion();
+}
+
+/* ---- Math ---- */
+function dots(n, color){
+  if(n === 0) return `<div class="dots ${color}"><span class="zero">zero</span></div>`;
+  let h = ''; for(let i=0;i<n;i++) h += `<i style="animation-delay:${i*90}ms"></i>`;
+  return `<div class="dots ${color}">${h}</div>`;
+}
+function renderMath(q){
+  game.typed = '';
+  game.prompt = `What is ${q.a} plus ${q.b}?`;
+  document.getElementById('stage').innerHTML = `
+    <div class="card" id="card"><div class="eq">
+      <div class="term"><div class="num">${q.a}</div>${dots(q.a,'blue')}</div>
+      <div class="op">+</div>
+      <div class="term"><div class="num">${q.b}</div>${dots(q.b,'green')}</div>
+      <div class="op">=</div>
+      <div class="answer empty" id="answer" aria-live="polite">?</div>
+    </div></div>
+    <div class="hint-row"><button class="btn yellow" data-action="hint">💡 Hint</button></div>
+    <div class="keypad">
+      ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-action="key" data-key="${n}">${n}</button>`).join('')}
+      <button class="key alt" data-action="key" data-key="back" aria-label="Erase">⌫</button>
+      <button class="key" data-action="key" data-key="0">0</button>
+      <button class="key go" data-action="key" data-key="enter" aria-label="Check my answer">✔</button>
+    </div>`;
+}
+function showTyped(){
+  const el = document.getElementById('answer');
+  el.textContent = game.typed || '?';
+  el.classList.toggle('empty', !game.typed);
+}
+function handleKey(k){
+  if(!game || game.subj !== 'math' || game.locked) return;
+  const q = game.questions[game.qi]; const ans = q.a + q.b;
+  if(k === 'back'){ game.typed = game.typed.slice(0,-1); showTyped(); return; }
+  if(k === 'enter'){ checkMath(); return; }
+  if(game.typed.length >= 2) return;
+  game.typed += k; tapSound(); showTyped();
+  if(game.typed.length >= String(ans).length) { game.locked = true; setTimeout(()=>{ game.locked=false; checkMath(); }, 350); }
+}
+function checkMath(){
+  if(!game || !game.typed) return;
+  const q = game.questions[game.qi]; const ans = q.a + q.b; const el = document.getElementById('answer');
+  if(Number(game.typed) === ans){
+    game.locked = true; el.classList.add('right'); dingSound();
+    say(`${q.a} plus ${q.b} is ${ans}! ${pick(PRAISE)}`);
+    setTimeout(nextQuestion, 2300);
+  } else {
+    game.wrong++; oopsSound(); reshake(el);
+    game.typed = ''; showTyped();
+    if(game.wrong >= 2 && !game.hint){ showHint(true); say('Try again. Count the dots!'); }
+    else say('Oops! Try again.');
+  }
+}
+
+/* ---- Letters ---- */
+function letterPhrase(L){
+  const word = LETTER_WORDS[L][1];
+  return L === 'X' ? `${word} ends with ${NAMES.X}` : `${NAMES[L]} is for ${word}`;
+}
+function renderLetter(q){
+  const L = q.letter; const [pic, word] = LETTER_WORDS[L];
+  const i = word.toUpperCase().indexOf(L);
+  const wordHTML = word.slice(0,i) + `<span class="hl">${word[i]}</span>` + word.slice(i+1);
+  const others = shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(x=>x!==L)).slice(0,2);
+  const choices = shuffle([L, ...others]);
+  game.prompt = `${letterPhrase(L)}. Find the letter ${NAMES[L]}!`;
+  document.getElementById('stage').innerHTML = `
+    <div class="card"><div class="pic">${pic}</div><div class="word">${wordHTML}</div></div>
+    <div class="hint-row"><button class="btn yellow" data-action="hint">💡 Hint</button></div>
+    <div class="choices3">
+      ${choices.map(c=>`<button class="tile" data-action="pick" data-letter="${c}" aria-label="Letter ${c}">${c}<small>${c.toLowerCase()}</small></button>`).join('')}
+    </div>`;
+}
+function pickLetter(btn){
+  if(!game || game.locked || btn.disabled) return;
+  const L = game.questions[game.qi].letter; const c = btn.dataset.letter;
+  if(c === L){
+    game.locked = true; btn.classList.remove('glow'); btn.classList.add('right'); dingSound();
+    say(`${NAMES[L]}! ${letterPhrase(L)}. ${pick(PRAISE)}`);
+    setTimeout(nextQuestion, 2600);
+  } else {
+    oopsSound(); reshake(btn); btn.classList.add('wrong'); btn.disabled = true;
+    say(`That is ${NAMES[c]}. Find ${NAMES[L]}!`);
+  }
+}
+
+/* ---- Words ---- */
+function renderWord(q){
+  const w = q.word; const letters = w.split(''); game.pos = 0;
+  const pool = shuffle('abdefghijklmnoprstuvwy'.split('').filter(c=>!letters.includes(c)));
+  const tiles = shuffle([...letters, pool[0], pool[1]]);
+  game.prompt = `${w}. Let's spell ${w}!`;
+  document.getElementById('stage').innerHTML = `
+    <div class="card"><div class="pic">${q.pic}</div>
+      <div class="model" id="model">${letters.map((c,i)=>`<span class="${i===0?'next':''}">${c}</span>`).join('')}</div>
+      <div class="slots" id="slots">${letters.map(()=>'<span class="slot"></span>').join('')}</div>
+    </div>
+    <div class="hint-row"><button class="btn yellow" data-action="hint">💡 Hint</button></div>
+    <div class="tiles">${tiles.map(c=>`<button class="tile sm" data-action="spell" data-letter="${c}" aria-label="Letter ${c}">${c}</button>`).join('')}</div>`;
+}
+function spellTile(btn){
+  if(!game || game.locked || btn.disabled) return;
+  const w = game.questions[game.qi].word; const need = w[game.pos]; const c = btn.dataset.letter;
+  if(c === need){
+    document.querySelectorAll('#slots .slot')[game.pos].textContent = c;
+    btn.classList.remove('glow'); btn.classList.add('used'); btn.disabled = true;
+    game.pos++;
+    document.querySelectorAll('#model span').forEach((s,i)=>{ s.className = i < game.pos ? 'done' : (i === game.pos ? 'next' : ''); });
+    document.querySelectorAll('.tile.glow').forEach(t=>t.classList.remove('glow'));
+    if(game.pos === w.length){
+      game.locked = true; document.getElementById('slots').classList.add('right'); dingSound();
+      say(`${w.split('').map(nameOf).join(', ')}. ${w}! ${pick(PRAISE)}`);
+      setTimeout(nextQuestion, 3200);
+    } else { tapSound(); say(nameOf(c)); }
+  } else {
+    oopsSound(); reshake(btn); say(`Find ${nameOf(need)}`);
+  }
+}
+
+/* ---- Hint ---- */
+function showHint(silent){
+  if(!game || game.locked) return;
+  game.hint = true;
+  if(game.subj === 'math'){
+    document.getElementById('card').classList.add('show-hint');
+    if(!silent) say('Count the dots!');
+  } else if(game.level.type === 'letters'){
+    const L = game.questions[game.qi].letter;
+    const t = document.querySelector(`.tile[data-letter="${L}"]`); if(t) t.classList.add('glow');
+    if(!silent) say(`Here is ${NAMES[L]}!`);
+  } else {
+    const need = game.questions[game.qi].word[game.pos];
+    const t = [...document.querySelectorAll('.tile.sm')].find(b=>!b.disabled && b.dataset.letter===need);
+    if(t) t.classList.add('glow');
+    if(!silent) say(`Find ${nameOf(need)}`);
+  }
+}
+
+/* ---- Win ---- */
+function finishLevel(){
+  game.locked = true; updateRoad(1);
+  progress[game.subj][game.idx] = (progress[game.subj][game.idx] || 0) + 1; saveProgress();
+  setTimeout(renderWin, 900);
+}
+function renderWin(){
+  if(!game) return;
+  const { subj, idx, level } = game; const hasNext = idx < SUBJECTS[subj].levels.length - 1;
+  $app.innerHTML = `
+    <div class="win">
+      <h1 class="win-title">You did it, ${KID}!</h1>
+      <div class="trophy-big">${trophySVG(level.icon)}</div>
+      <p class="win-sub">${SUBJECTS[subj].title} level ${idx+1}: ${level.name}</p>
+      <div class="win-actions">
+        ${hasNext ? `<button class="btn green" data-action="start" data-subject="${subj}" data-level="${idx+1}">Next level</button>` : ''}
+        <button class="btn" data-action="start" data-subject="${subj}" data-level="${idx}">Play again</button>
+        <button class="btn yellow" data-action="home">🏠 Home</button>
+      </div>
+    </div>`;
+  confetti(); fanfare();
+  setTimeout(()=>say(`Great job, ${KID}! You won a trophy!`), 2600);
+}
+
+/* ============ MENU + RESET ============ */
+function toggleMenu(force){
+  const m = document.getElementById('menu'); const b = document.querySelector('.menu-btn'); if(!m) return;
+  const open = force !== undefined ? force : m.hidden;
+  m.hidden = !open; if(b) b.setAttribute('aria-expanded', String(open));
+}
+function askReset(){
+  toggleMenu(false);
+  const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.id = 'modal';
+  bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <h2 id="mt">Reset trophies?</h2>
+    <p>This takes away all ${trophyCount()} of ${KID}’s trophies on this device.</p>
+    <div class="row">
+      <button class="btn" data-action="reset-no">Keep them</button>
+      <button class="btn yellow" data-action="reset-yes">Reset</button>
+    </div></div>`;
+  document.body.appendChild(bg);
+}
+function closeModal(){ const m = document.getElementById('modal'); if(m) m.remove(); }
+
+/* ============ INPUT ============ */
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-action]');
+  if(!e.target.closest('#menu') && (!b || b.dataset.action !== 'menu')) toggleMenu(false);
+  if(!b) return;
+  audio();
+  if(['home','start','levels','subject'].includes(b.dataset.action)) document.querySelectorAll('.confetti').forEach(c=>c.remove());
+  switch(b.dataset.action){
+    case 'home': hush(); renderHome(); break;
+    case 'subject': renderLevels(b.dataset.subject); say(`${SUBJECTS[b.dataset.subject].title}! Pick a level.`); break;
+    case 'levels': { const s = game ? game.subj : 'math'; hush(); game = null; renderLevels(s); break; }
+    case 'start': startLevel(b.dataset.subject, Number(b.dataset.level)); break;
+    case 'repeat': if(game && game.prompt) say(game.prompt); break;
+    case 'hint': showHint(false); break;
+    case 'key': handleKey(b.dataset.key); break;
+    case 'pick': pickLetter(b); break;
+    case 'spell': spellTile(b); break;
+    case 'menu': toggleMenu(); break;
+    case 'reset-ask': askReset(); break;
+    case 'reset-no': closeModal(); break;
+    case 'reset-yes':
+      progress = { math:[0,0,0,0,0], reading:[0,0,0,0,0] }; saveProgress(); closeModal(); renderHome(); break;
+  }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){ toggleMenu(false); closeModal(); }
+  if(!game || game.subj !== 'math' || !document.getElementById('answer')) return;
+  if(/^[0-9]$/.test(e.key)) handleKey(e.key);
+  else if(e.key === 'Backspace') handleKey('back');
+  else if(e.key === 'Enter') handleKey('enter');
+});
+
+renderHome();
+</script>
+</body>
+</html>
