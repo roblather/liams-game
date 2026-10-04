@@ -1,12 +1,11 @@
 # Liam's Game!
 
-A learning game for Liam with two parts:
+A learning game for Liam, live at https://liamsgame.com
 
-- **Math**: 5 levels of addition with numbers under 20. The Hint button shows dots to count.
-- **Reading**: Levels 1 to 3 teach letters A to Z. Levels 4 and 5 teach small words (cat, dog, car, bus...).
+- **Math** (10 levels): adding under 20 with dot hints, counting objects (tap each one to count), take away with crossed-out dots, and missing numbers with a number line.
+- **Reading** (9 levels): letters A to Z, spelling small words, sight words (hear it, tap it), and short sentences with tap-to-hear words and a matching picture.
+- **Fun Stuff** (5 levels): spelling LIAM, colors, color words, and days of the week.
 
-Finishing a level earns a trophy with Liam's name, plus confetti and music. Trophies are saved in the browser on each device.
+Every level shows "how many to go". Finishing a level earns a trophy with Liam's name, plus confetti and music. Trophies are saved in the browser on each device.
 
-Everything lives in `index.html`. Easy things to change are near the top of the script under `SETTINGS` (the kid's name, level names, words, and number ranges).
-
-Play it at: https://roblather.github.io/liams-game/
+Everything lives in `index.html`, including the recorded voice clips (that's why the file is big). Easy things to change are near the top of the second script under `SETTINGS`. If you change words, names, or number ranges, the voice clips need to be re-recorded.
